@@ -3,6 +3,6 @@ Encoding=UTF-8
 Type=Application
 Name=LampiLauncher
 Comment=autostart of lampi python script
-Exec=xterm -hold -e python3 /home/pi/lampi/scripts/lampi_run.py 
+Exec=xterm -hold -e python3 /home/pi/LamPi/scripts/lampi_run.py 
 
 Name[en_GB]=LampiLauncher

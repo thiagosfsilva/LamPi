@@ -8,7 +8,7 @@ from gpiozero import CPUTemperature
 
 ### Set recording parameters here
 whichPi = "Pi_1" # set raspberry pi identifier
-outDir = '/home/pi/Videos/lampi_test/'
+outDir = '/home/pi/LamPi/videos/'
 
 camera = picamera.PiCamera() # activate pi camera
 camera.resolution = (1024, 768) # set video resolution
