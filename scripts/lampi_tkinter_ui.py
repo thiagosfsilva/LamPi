@@ -60,6 +60,17 @@ vidEndCombobox = ttk.Combobox(mainframe, textvariable=vidEnd)
 vidEndCombobox['values'] = (1,3,10,30,60,120,300)
 vidEndCombobox.state(['readonly'])
 
+# Select out of hours timelapse timing   
+timeLapse = IntVar()
+timeLapseCombobox = ttk.Combobox(mainframe, textvariable=timeLapse)
+timeLapseCombobox['values'] = (1,3,10,30,60,120,300)
+timeLapseCombobox.state(['readonly'])
+
+# Option to restart with saved pameters
+reStart = BooleanVar()
+reStartCheckbutton = ttk.Checkbutton(mainframe, text='Autostart recording on boot', variable=reStart)
+	    
+
 ### UI layout
 
 # Left columns (0,1)
@@ -80,5 +91,10 @@ vidStrtCombobox.grid(column=1, row=4, sticky=(W, E))
 
 ttk.Label(mainframe, text=" End at ").grid(column=2, row=4, sticky=W)
 vidEndCombobox.grid(column=3, row=4, sticky=(W, E))
+
+ttk.Label(mainframe, text=" Out of hours timelapse rate ").grid(column=0, row=5, sticky=W)
+timeLapseCombobox.grid(column=1, row=5, sticky=(W, E))
+
+reStartCheckbutton.grid(column=0, row=6)
 
 root.mainloop()
