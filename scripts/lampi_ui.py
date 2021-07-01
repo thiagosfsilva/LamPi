@@ -1,10 +1,13 @@
 # from types import TracebackType
 import PySimpleGUI as sg  # to create and run the UI
-import os.path  # to handle file paths
 import pickle  # to save parameters
+import picamera  # to control the RPi camera
+import os  # to manipuilate file paths
+import shutil  # aslo for file paths
+from datetime import datetime  # to get date and time
+from gpiozero import CPUTemperature  # to log CPU temperature
 
-
-##### Define / Import functions ######
+##### Define  functions ######
 
 
 def save_params(params):
@@ -108,15 +111,58 @@ layout = [
 # Create the Window
 window = sg.Window("LamPi UI", layout, size=(480, 320), font=("Piboto Condensed", 10))
 
+# Instantiate camera
+camera = picamera.PiCamera()
+
 # Event Loop to process events (get values and run functions)
 while True:
     event, values = window.read()
-    if event == "-START-":
-        save_params(values)
-        start_log("-FOLDER-")
-        start_rec(values)
-        window["-TEXTBOX-"].print("\nParameters saved:\n", values)
-    if event == sg.WIN_CLOSED:  # ends program if user closes window
+    try:
+        params = pickle.load(open("/home/pi/LamPi/params/params.p", "rb"))
+    except:
+        params = pickle.load(open("/home/pi/LamPi/params/init_params.p", "rb"))
+    if params.get("-AUTOREC-") or event == "-START-":
+        if event == "-START-":
+            params = values
+            save_params(values)
+            window["-TEXTBOX-"].print("\nParameters saved:\n", values)
+        # activate pi camera
+        params = values
+        camera.resolution = params.get("-RES-")  # set video resolution
+        camera.framerate = params.get("-FPS-")  # set video framerate
+        logName = "/home/pi/LamPi/sync/logs/PI%s_log.txt" % params.get("-PNUM-")
+        logFile = open(logName, "a")
+        logFile.write(
+            "\n Script started on %s " % datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        )
+        logFile.close()
+        window["-TEXTBOX-"].print("\nRecording Started...:\n", params)
+        sysTime = datetime.now()
+        startTime = sysTime.strftime("%Y-%m-%d_%H_%M_%S")
+        outName = "lampivid_%s_%s.h264" % (params.get("-PNUM-"), startTime)
+        camera.start_recording(outName)
+        camera.wait_recording(params.get("-CLDUR-"))
+        camera.stop_recording()
+        cpuTemp = round(CPUTemperature().temperature, 1)
+        diskUsage = shutil.disk_usage("/")
+        diskFree = round(diskUsage.free / (1000000000), 2)
+        logOut = "\n\tCPU temp: %s , free disk space: %s Gb, last file: %s" % (
+            cpuTemp,
+            diskFree,
+            outName,
+        )
+        logFile = open(logName, "a")
+        logFile.write(logOut)
+        logFile.close()
+    if event == "-STOP-" or event == sg.WIN_CLOSED:
+        camera.stop_recording()
+        intMsg = "\nInterrupted by user at %s " % datetime.now().strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
+        logFile = open(logName, "a")
+        logFile.write(intMsg)
+        logFile.close()
+        window["-TEXTBOX-"].print(intMsg)
         break
-
-window.close()
+        if event == sg.WIN_CLOSED:  # ends program if user closes window
+            window.close()
