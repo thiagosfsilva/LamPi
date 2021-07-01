@@ -3,9 +3,10 @@ import PySimpleGUI as sg # to create and run the UI
 import os.path # to handle file paths
 import pickle # to save parameters
 
-##### Import functions ######
+##### Define / Import functions ######
 
-
+def save_params(params):
+    pickle.dump(params, open("params.p", "wb" ))
 
 ###### UI APP ########## 
 
@@ -45,11 +46,23 @@ btn_endtime = sg.OptionMenu(
 # save parameters
 btn_save = sg.Button('Save', enable_events=True, key = '-SAVE-')
 
+# start recording
+btn_start = sg.Button('Start', size=(25,1), enable_events=True,  key='-START-')
+
 # Checkboxes #
 
 chbx_daytime = sg.Checkbox(
     'Enable 2sec timelapse outside recording hours?', default=False, key = '-DTLPS-'
     )
+
+# Multiline text box #
+
+out_box = sg.Multiline(
+    """1) Select settings
+    2) Save settings
+    3) Click 'Start' """
+    , size=(27,8), key='-TEXTBOX-') 
+
 
 ## UI Layout and appearabnce ##
 
@@ -67,11 +80,8 @@ setup_column = [
 
 #  Set right (run app) layout         
 run_column = [
-    [sg.Button('Start', size=(25,1), enable_events=True,  key='-START-')],
-    [sg.Multiline("""1) Select settings
-2) Save settings
-3) Click 'Start' """
-    , size=(27,8), key='-TEXTBOX-')]
+    [btn_start],
+    [out_box]
 ] 
 
 # Set 2-column window layout
@@ -89,9 +99,10 @@ window = sg.Window('LamPi UI', layout)
 # Event Loop to process events (get values and run functions) 
 while True:
     event, values = window.read()
-
-    if event == sg.WIN_CLOSED or event == 'Cancel': # if user closes window or clicks cancel
+    if event == "-SAVE-":
+        save_params(values)
+        window['-TEXTBOX-'].print('\nParameters saved:\n', values)
+    if event == sg.WIN_CLOSED: # ends program if user closes window
         break
-    window['-TEXTBOX-'].print('\nParameters saved:\n', values)
-
+ 
 window.close()
