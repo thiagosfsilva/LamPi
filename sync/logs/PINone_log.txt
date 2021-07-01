@@ -1,0 +1,5 @@
+
+ Script started on 2021-07-01 14:21:12 
+	CPU temp: 42.4 , free disk space: 114.53 Gb, last file: lampivid_None_2021-07-01_14_21_12.h264
+ Script started on 2021-07-01 14:22:33 
+	CPU temp: 41.9 , free disk space: 114.53 Gb, last file: lampivid_None_2021-07-01_14_22_33.h264

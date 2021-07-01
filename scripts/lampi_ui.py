@@ -120,16 +120,18 @@ while True:
     try:
         params = pickle.load(open("/home/pi/LamPi/params/params.p", "rb"))
     except:
-        params = pickle.load(open("/home/pi/LamPi/params/init_params.p", "rb"))
-    if params.get("-AUTOREC-") or event == "-START-":
+        values["-AUTOREC-"] = False
+    if params["-AUTOREC-"] == True or event == "-START-":
         if event == "-START-":
             params = values
             save_params(values)
             window["-TEXTBOX-"].print("\nParameters saved:\n", values)
         # activate pi camera
         params = values
+        # res = eval(params.get("-RES-"))
+        params["-RES-"] = eval(params["-RES-"])
         camera.resolution = params.get("-RES-")  # set video resolution
-        camera.framerate = params.get("-FPS-")  # set video framerate
+        camera.framerate = int(params.get("-FPS-"))  # set video framerate
         logName = "/home/pi/LamPi/sync/logs/PI%s_log.txt" % params.get("-PNUM-")
         logFile = open(logName, "a")
         logFile.write(
@@ -141,7 +143,7 @@ while True:
         startTime = sysTime.strftime("%Y-%m-%d_%H_%M_%S")
         outName = "lampivid_%s_%s.h264" % (params.get("-PNUM-"), startTime)
         camera.start_recording(outName)
-        camera.wait_recording(params.get("-CLDUR-"))
+        camera.wait_recording(int(params.get("-CLDUR-")))
         camera.stop_recording()
         cpuTemp = round(CPUTemperature().temperature, 1)
         diskUsage = shutil.disk_usage("/")
@@ -155,14 +157,18 @@ while True:
         logFile.write(logOut)
         logFile.close()
     if event == "-STOP-" or event == sg.WIN_CLOSED:
-        camera.stop_recording()
+        try:
+            camera.stop_recording()
+        except:
+            pass
         intMsg = "\nInterrupted by user at %s " % datetime.now().strftime(
             "%Y-%m-%d %H:%M:%S"
         )
-        logFile = open(logName, "a")
+        """ logFile = open(logName, "a")
         logFile.write(intMsg)
-        logFile.close()
+        logFile.close() """
         window["-TEXTBOX-"].print(intMsg)
-        break
         if event == sg.WIN_CLOSED:  # ends program if user closes window
-            window.close()
+            break
+
+window.close()
