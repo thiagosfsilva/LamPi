@@ -1,6 +1,7 @@
 # from types import TracebackType
 import PySimpleGUI as sg  # to create and run the UI
-import pickle  # to save parameters
+import pickle
+from PySimpleGUI.PySimpleGUI import fill_form_with_values  # to save parameters
 import picamera  # to control the RPi camera
 import os  # to manipuilate file paths
 import shutil  # aslo for file paths
@@ -53,36 +54,32 @@ btn_timelapse = sg.OptionMenu([1, 2, 5, 10], key="-TLPS-")
 btn_endtime = sg.OptionMenu([1, 3, 10, 30, 60, 90, 120, 300, 600], key="-ENDT-")
 
 # save parameters
-# btn_ok = sg.Button("OK", enable_events=True, key="-OK-")
+btn_save = sg.Button("Save parameters", enable_events=True, key="-SAVE-")
 
 # start recording
-btn_start = sg.Button("Start", size=(25, 1), enable_events=True, key="-START-")
+btn_start = sg.Button(
+    "Start", size=(25, 1), enable_events=True, key="-START-", disabled=False
+)
 
 # stop recording
-btn_stop = sg.Button("Stop", size=(25, 1), enable_events=True, key="-STOP-")
+btn_stop = sg.Button(
+    "Stop", size=(25, 1), enable_events=True, key="-STOP-", disabled=True
+)
 
 # Checkboxes #
-
 chbx_autostart = sg.Checkbox(
     "Enable recording autostart on boot", default=False, key="-AUTOREC-"
 )
 
 # Multiline text box #
+out_box = sg.Multiline("Press start...", size=(27, 12), key="-TEXTBOX-")
 
-out_box = sg.Multiline(
-    """1) Select settings
-    2) Save settings
-    3) Click 'Start' """,
-    size=(27, 12),
-    key="-TEXTBOX-",
-)
+## UI Layout and appearance ##
 
-
-## UI Layout and appearabnce ##
-
+# Set color theme
 sg.theme("DarkTanBlue")  # Set colour theme
 
-# Set left (parameter input ) column layout
+# Set left (parameter input) column layout
 setup_column = [
     [sg.Text("Pi Number"), btn_pinum],
     [sg.Text("Video Resolution"), btn_res],
@@ -91,7 +88,8 @@ setup_column = [
     [sg.Text("Daytime timelapse interval (s)"), btn_timelapse],
     [sg.Text("Rec Start/End"), btn_strtime, btn_endtime],
     [chbx_autostart],
-    [sg.Text("Select folder to save videos:  "), sg.FolderBrowse(key="-FOLDER-")],
+    [btn_save]
+    # [sg.Text("Select folder to save videos:  "), sg.FolderBrowse(key="-FOLDER-")],
 ]
 
 #  Set right (run app) layout
@@ -111,64 +109,81 @@ layout = [
 # Create the Window
 window = sg.Window("LamPi UI", layout, size=(480, 320), font=("Piboto Condensed", 10))
 
-# Instantiate camera
+# Instantiate camera and recording state
 camera = picamera.PiCamera()
+rec_state = False
 
 # Event Loop to process events (get values and run functions)
 while True:
     event, values = window.read()
-    try:
-        params = pickle.load(open("/home/pi/LamPi/params/params.p", "rb"))
-    except:
-        values["-AUTOREC-"] = False
-    if params["-AUTOREC-"] == True or event == "-START-":
-        if event == "-START-":
-            params = values
-            save_params(values)
-            window["-TEXTBOX-"].print("\nParameters saved:\n", values)
-        # activate pi camera
+
+    # Start buttons sets the camera and toggles the recording state
+    if event == "-START-":
         params = values
-        # res = eval(params.get("-RES-"))
-        params["-RES-"] = eval(params["-RES-"])
-        camera.resolution = params.get("-RES-")  # set video resolution
+        camera.resolution = eval(params["-RES-"])  # set video resolution
         camera.framerate = int(params.get("-FPS-"))  # set video framerate
-        logName = "/home/pi/LamPi/sync/logs/PI%s_log.txt" % params.get("-PNUM-")
+        logName = "/home/pi/LamPi/sync/logs/PI%s_log.txt" % params.get("-PINUM-")
         logFile = open(logName, "a")
         logFile.write(
             "\n Script started on %s " % datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         )
         logFile.close()
         window["-TEXTBOX-"].print("\nRecording Started...:\n", params)
-        sysTime = datetime.now()
-        startTime = sysTime.strftime("%Y-%m-%d_%H_%M_%S")
-        outName = "lampivid_%s_%s.h264" % (params.get("-PNUM-"), startTime)
-        camera.start_recording(outName)
-        camera.wait_recording(int(params.get("-CLDUR-")))
-        camera.stop_recording()
-        cpuTemp = round(CPUTemperature().temperature, 1)
-        diskUsage = shutil.disk_usage("/")
-        diskFree = round(diskUsage.free / (1000000000), 2)
-        logOut = "\n\tCPU temp: %s , free disk space: %s Gb, last file: %s" % (
-            cpuTemp,
-            diskFree,
-            outName,
-        )
-        logFile = open(logName, "a")
-        logFile.write(logOut)
-        logFile.close()
+        window.FindElement("-START-").Update(disabled=True)
+        window.FindElement("-STOP-").Update(disabled=False)
+        rec_state = True
+
+    # Restart loop if recording has not been started
+    if rec_state == False:
+        continue
+
+    # Stopping rules
     if event == "-STOP-" or event == sg.WIN_CLOSED:
-        try:
+        if rec_state == True:
             camera.stop_recording()
-        except:
-            pass
-        intMsg = "\nInterrupted by user at %s " % datetime.now().strftime(
-            "%Y-%m-%d %H:%M:%S"
-        )
-        """ logFile = open(logName, "a")
-        logFile.write(intMsg)
-        logFile.close() """
-        window["-TEXTBOX-"].print(intMsg)
+            logFile = open(logName, "a")
+            logFile.write(intMsg)
+            logFile.close()
+            intMsg = "\nInterrupted by user at %s " % datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+            window["-TEXTBOX-"].print(intMsg)
+            rec_state = False
+            window.FindElement("-START-").Update(disabled=False)
+            window.FindElement("-STOP-").Update(disabled=True)
         if event == sg.WIN_CLOSED:  # ends program if user closes window
             break
+        else:
+            continue
+
+    sysTime = datetime.now()
+    startTime = sysTime.strftime("%Y-%m-%d_%H_%M_%S")
+    outName = "/home/pi/LamPi/sync/videos/lampivid_%s_%s.h264" % (
+        params.get("-PNUM-"),
+        startTime,
+    )
+    camera.start_recording(outName)
+    camera.wait_recording(int(params.get("-CLDUR-")))
+    camera.stop_recording()
+    cpuTemp = round(CPUTemperature().temperature, 1)
+    diskUsage = shutil.disk_usage("/")
+    diskFree = round(diskUsage.free / (1000000000), 2)
+    logOut = "\n\tCPU temp: %s , free disk space: %s Gb, last file: %s" % (
+        cpuTemp,
+        diskFree,
+        outName,
+    )
+    logFile = open(logName, "a")
+    logFile.write(logOut)
+    logFile.close()
+    window["-TEXTBOX-"].print(logOut)
 
 window.close()
+
+# try:
+#     params = pickle.load(open("/home/pi/LamPi/params/params.p", "rb"))
+# except:
+#     values["-AUTOREC-"] = False
+
+#         save_params(values)
+#         window["-TEXTBOX-"].print("\nParameters saved:\n", values)
