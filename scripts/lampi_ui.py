@@ -6,6 +6,7 @@ import shutil  # aslo for file paths
 from datetime import datetime  # to get date and time
 from gpiozero import CPUTemperature  # to log CPU temperature
 import threading
+import picamera
 
 ##### Define and import functions ######
 import lampi_run_threaded as td
@@ -13,18 +14,6 @@ import lampi_run_threaded as td
 
 def save_params(params):
     pickle.dump(params, open("/home/pi/LamPi/params/params.p", "wb"))
-
-
-def rec_thread():
-    threading.Thread(
-        target=td.do_rec,
-        args=(
-            values,
-            window,
-        ),
-        daemon=True,
-    ).start()
-
 
 ###### UI APP ##########
 
@@ -53,24 +42,34 @@ btn_res = sg.OptionMenu(
 )
 
 # select video framerate
-btn_fps = sg.OptionMenu([10, 15, 30, 60], key="-FPS-", default_value=10)
+btn_fps = sg.OptionMenu(
+    [10, 15, 30, 60], key="-FPS-", default_value=10
+    )
 
 # select clip duration
 btn_clipdur = sg.OptionMenu(
-    [1, 3, 10, 30, 60, 90, 120, 300, 600], key="-CLDUR-", default_value=3
+    [1, 3, 10, 30, 60, 90, 120, 300, 600], key="-CLDUR-", default_value=10
 )
 
 # select recording start time
-btn_strtime = sg.OptionMenu([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], key="-STRT-")
+btn_strtime = sg.OptionMenu(
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], key="-STRT-"
+    )
 
 # select daytime timelapse interval
-btn_timelapse = sg.OptionMenu([1, 2, 5, 10], key="-TLPS-")
+btn_timelapse = sg.OptionMenu(
+    [1, 2, 5, 10], key="-TLPS-"
+    )
 
 # select recording end time
-btn_endtime = sg.OptionMenu([1, 3, 10, 30, 60, 90, 120, 300, 600], key="-ENDT-")
+btn_endtime = sg.OptionMenu(
+    [1, 3, 10, 30, 60, 90, 120, 300, 600], key="-ENDT-"
+    )
 
 # save parameters
-btn_save = sg.Button("Save parameters", enable_events=True, key="-SAVE-")
+btn_save = sg.Button(
+    "Save parameters", enable_events=True, key="-SAVE-"
+    )
 
 # start recording
 btn_start = sg.Button(
@@ -88,7 +87,9 @@ chbx_autostart = sg.Checkbox(
 )
 
 # Multiline text box #
-out_box = sg.Multiline("Press start...", size=(27, 12), key="-TEXTBOX-")
+out_box = sg.Multiline(
+    "Press start...", size=(27, 12), key="-TEXTBOX-"
+    )
 
 ## UI Layout and appearance ##
 
@@ -127,22 +128,30 @@ window = sg.Window("LamPi UI", layout, size=(480, 320), font=("Piboto Condensed"
 
 # Event Loop to process events (get values and run functions)
 while True:
-    event, values = window.read()
-    if event == "-RECMSG":
+    event, values = window.read(timeout=500)
+    if event == "-RECMSG-":
         window["-TEXTBOX-"].print(values["-RECMSG-"])
     # Start buttons sets the camera and toggles the recording state
-    if event == "-START-":
-        td.set_log(values["-PINUM-"])
-        rec_thread()
+    elif event == "-START-":
+        exit_event = threading.Event()
+        t1 = threading.Thread(target=td.do_rec, args=(values,window,exit_event), daemon=True)
+        t1.start()
         window["-TEXTBOX-"].print("\nRecording Started...:\n")
         window.FindElement("-START-").Update(disabled=True)
         window.FindElement("-STOP-").Update(disabled=False)
 
     # Stopping rules
-    if event == "-STOP-" or event == sg.WIN_CLOSED:
-        td.stop_rec(camera, logName)
-        if event == sg.WIN_CLOSED:  # ends program if user closes window
-            break
+    elif event == "-STOP-":
+        window["-TEXTBOX-"].print("Stopping...")
+        window.FindElement("-START-").Update(disabled=False)
+        window.FindElement("-STOP-").Update(disabled=True)
+        exit_event.set()
+        t1.join()
+
+    elif event == sg.WIN_CLOSED:  # ends program if user closes window
+        exit_event.set()
+        t1.join()
+        break
 
 window.close()
 
