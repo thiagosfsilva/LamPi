@@ -2,16 +2,28 @@
 import PySimpleGUI as sg  # to create and run the UI
 import pickle
 from PySimpleGUI.PySimpleGUI import fill_form_with_values  # to save parameters
-import picamera  # to control the RPi camera
 import shutil  # aslo for file paths
 from datetime import datetime  # to get date and time
 from gpiozero import CPUTemperature  # to log CPU temperature
+import threading
 
-##### Define  functions ######
+##### Define and import functions ######
+import lampi_run_threaded as td
 
 
 def save_params(params):
     pickle.dump(params, open("/home/pi/LamPi/params/params.p", "wb"))
+
+
+def rec_thread():
+    threading.Thread(
+        target=td.do_rec,
+        args=(
+            values,
+            window,
+        ),
+        daemon=True,
+    ).start()
 
 
 ###### UI APP ##########
@@ -21,7 +33,9 @@ def save_params(params):
 # Buttons #
 
 # Select pi number
-btn_pinum = sg.OptionMenu([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], key="-PINUM-")
+btn_pinum = sg.OptionMenu(
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], key="-PINUM-", default_value=1
+)
 
 # Select video resolution
 btn_res = sg.OptionMenu(
@@ -35,13 +49,16 @@ btn_res = sg.OptionMenu(
         (1440, 1080),
     ],
     key="-RES-",
+    default_value=(640, 480),
 )
 
 # select video framerate
-btn_fps = sg.OptionMenu([10, 15, 30, 60], key="-FPS-")
+btn_fps = sg.OptionMenu([10, 15, 30, 60], key="-FPS-", default_value=10)
 
 # select clip duration
-btn_clipdur = sg.OptionMenu([1, 3, 10, 30, 60, 90, 120, 300, 600], key="-CLDUR-")
+btn_clipdur = sg.OptionMenu(
+    [1, 3, 10, 30, 60, 90, 120, 300, 600], key="-CLDUR-", default_value=3
+)
 
 # select recording start time
 btn_strtime = sg.OptionMenu([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], key="-STRT-")
@@ -108,64 +125,24 @@ layout = [
 # Create the Window
 window = sg.Window("LamPi UI", layout, size=(480, 320), font=("Piboto Condensed", 10))
 
-
-
-
 # Event Loop to process events (get values and run functions)
 while True:
     event, values = window.read()
-
+    if event == "-RECMSG":
+        window["-TEXTBOX-"].print(values["-RECMSG-"])
     # Start buttons sets the camera and toggles the recording state
     if event == "-START-":
-        ### Initialise with selected parameters
-        params = values
-        camera = picamera.PiCamera()
-        ## START THREADED  
-
-    # Restart loop if recording has not been started
-    if rec_state == False:
-        continue
+        td.set_log(values["-PINUM-"])
+        rec_thread()
+        window["-TEXTBOX-"].print("\nRecording Started...:\n")
+        window.FindElement("-START-").Update(disabled=True)
+        window.FindElement("-STOP-").Update(disabled=False)
 
     # Stopping rules
     if event == "-STOP-" or event == sg.WIN_CLOSED:
-        if rec_state == True:
-            camera.stop_recording()
-            logFile = open(logName, "a")
-            logFile.write(intMsg)
-            logFile.close()
-            intMsg = "\nInterrupted by user at %s " % datetime.now().strftime(
-                "%Y-%m-%d %H:%M:%S"
-            )
-            window["-TEXTBOX-"].print(intMsg)
-            rec_state = False
-            window.FindElement("-START-").Update(disabled=False)
-            window.FindElement("-STOP-").Update(disabled=True)
+        td.stop_rec(camera, logName)
         if event == sg.WIN_CLOSED:  # ends program if user closes window
             break
-        else:
-            continue
-
-    sysTime = datetime.now()
-    startTime = sysTime.strftime("%Y-%m-%d_%H_%M_%S")
-    outName = "/home/pi/LamPi/sync/videos/lampivid_%s_%s.h264" % (
-        params.get("-PNUM-"),
-        startTime,
-    )
-    camera.start_recording(outName)
-    camera.wait_recording(int(params.get("-CLDUR-")))
-    camera.stop_recording()
-    cpuTemp = round(CPUTemperature().temperature, 1)
-    diskUsage = shutil.disk_usage("/")
-    diskFree = round(diskUsage.free / (1000000000), 2)
-    logOut = "\n\tCPU temp: %s , free disk space: %s Gb, last file: %s" % (
-        cpuTemp,
-        diskFree,
-        outName,
-    )
-    logFile = open(logName, "a")
-    logFile.write(logOut)
-    logFile.close()
-    window["-TEXTBOX-"].print(logOut)
 
 window.close()
 
