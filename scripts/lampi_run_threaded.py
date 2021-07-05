@@ -4,8 +4,7 @@ import picamera
 import shutil
 from datetime import datetime
 from gpiozero import CPUTemperature
-import threading
-import pickle
+
 
 def do_rec(params, window, exit_event):
     # global stop_threads
@@ -34,7 +33,7 @@ def do_rec(params, window, exit_event):
         logFile.write(logOut)
         logFile.close()
         window.write_event_value("-RECMSG-", outName)
-        
+
         if exit_event.is_set():
             getTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             intMsg = f"\nInterrupted by user at {getTime}"
@@ -44,7 +43,3 @@ def do_rec(params, window, exit_event):
             logFile.close()
             window.write_event_value("-RECMSG-", "Recording stopped successfully.")
             break
-
-
-
-

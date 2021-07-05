@@ -2,16 +2,10 @@
 import PySimpleGUI as sg  # to create and run the UI
 import pickle
 from PySimpleGUI.PySimpleGUI import fill_form_with_values  # to save parameters
-import shutil  # aslo for file paths
 from datetime import datetime, time, timedelta  # to get date and time
-from gpiozero import CPUTemperature  # to log CPU temperature
-import threading
-import picamera
+import subprocess
 
-##### Define and import functions ######
-import lampi_run_threaded as td
-
-
+##### Definefunctions ######
 def save_params(params):
     pickle.dump(params, open("/home/pi/LamPi/params/params.p", "wb"))
 
@@ -70,7 +64,7 @@ btn_save = sg.Button("Save parameters", enable_events=True, key="-SAVE-")
 
 # start recording
 btn_start = sg.Button(
-    "Start", size=(25, 1), enable_events=True, key="-START-", disabled=False
+    "Start", size=(25, 1), enable_events=True, key="-START-", disabled=True
 )
 
 # stop recording
@@ -98,64 +92,44 @@ setup_column = [
     [sg.Text("Video frame rate"), btn_fps],
     [sg.Text("Clip Duration (s)"), btn_clipdur],
     [sg.Text("Daytime timelapse interval (s)"), btn_timelapse],
-    [sg.Text("Rec Start/End"), btn_strtime, btn_endtime],
-    [chbx_autostart],
-    [btn_save]
+    [sg.Text("Rec Start"), btn_strtime],
+    [sg.Text("Rec Stop"), btn_endtime],
+    # [chbx_autostart],
+    [btn_save, btn_start]
     # [sg.Text("Select folder to save videos:  "), sg.FolderBrowse(key="-FOLDER-")],
 ]
 
 #  Set right (run app) layout
-run_column = [[btn_start], [btn_stop], [out_box]]
+# run_column = [[btn_start], [btn_stop], [out_box]]
 
 # Set 2-column window layout
 layout = [
     [
-        sg.Column(setup_column),  # left column
-        sg.VSeparator(),  # vertical separator (line)
-        sg.Column(run_column),
+        sg.Column(setup_column)  # ,  # left column
+        # sg.VSeparator(),  # vertical separator (line)
+        # sg.Column(run_column),
     ]  # right column
 ]
 
 ### App execution ###
 
 # Create the Window
-window = sg.Window("LamPi UI", layout, size=(480, 320), font=("Piboto Condensed", 10))
+window = sg.Window("LamPi UI", layout, size=(240, 320), font=("Piboto Condensed", 10))
 
 # Event Loop to process events (get values and run functions)
 while True:
     event, values = window.read()
-    if event == "-RECMSG-":
-        window["-TEXTBOX-"].print(values["-RECMSG-"])
+    # Stopping rules
+    if event == sg.WIN_CLOSED:  # ends program if user closes window
+        break
+    elif event == "-SAVE-":
+        pickle.dump(values, open("/home/pi/LamPi/params/params.p", "wb"))
+        window.FindElement("-START-").Update(disabled=False)
     # Start buttons sets the camera and toggles the recording state
     elif event == "-START-":
-        exit_event = threading.Event()
-        t1 = threading.Thread(
-            target=td.do_rec, args=(values, window, exit_event), daemon=True
+        subprocess.run(
+            "xterm -geometry 40x24+241+1 -hold -e python3 /home/pi/LamPi/scripts/lampi_run_terminal.py",
+            shell=True,
         )
-        t1.start()
-        window["-TEXTBOX-"].print("\nRecording Started...:\n")
-        window.FindElement("-START-").Update(disabled=True)
-        window.FindElement("-STOP-").Update(disabled=False)
-
-    # Stopping rules
-    elif event == "-STOP-":
-        window["-TEXTBOX-"].print("Stopping...")
-        window.FindElement("-START-").Update(disabled=False)
-        window.FindElement("-STOP-").Update(disabled=True)
-        exit_event.set()
-        t1.join()
-
-    elif event == sg.WIN_CLOSED:  # ends program if user closes window
-        exit_event.set()
-        t1.join()
-        break
 
 window.close()
-
-# try:
-#     params = pickle.load(open("/home/pi/LamPi/params/params.p", "rb"))
-# except:
-#     values["-AUTOREC-"] = False
-
-#         save_params(values)
-#         window["-TEXTBOX-"].print("\nParameters saved:\n", values)
