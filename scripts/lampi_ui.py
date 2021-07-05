@@ -128,7 +128,7 @@ window = sg.Window("LamPi UI", layout, size=(480, 320), font=("Piboto Condensed"
 
 # Event Loop to process events (get values and run functions)
 while True:
-    event, values = window.read(timeout=500)
+    event, values = window.read()
     if event == "-RECMSG-":
         window["-TEXTBOX-"].print(values["-RECMSG-"])
     # Start buttons sets the camera and toggles the recording state
