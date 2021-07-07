@@ -1,0 +1,6 @@
+- Figure out the Ctrl-C
+- Hour selection doesn't fit on window
+- setup script
+  - rclone sync
+- window position on left top corner
+- printout of the timelapse

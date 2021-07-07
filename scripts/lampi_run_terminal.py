@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-import picamera
+import picamera, shutil, pickle
 from time import sleep
-import shutil
-from datetime import datetime, time
+from datetime import datetime
 from gpiozero import CPUTemperature
-import pickle
 
 ### Retrieve saved parameters
 params = pickle.load(open("/home/pi/LamPi/params/params.p", "rb"))
@@ -94,11 +92,14 @@ try:
             logFile = open(logName, "a")
             logFile.write(logOut)
             logFile.close()
-            print("logOut")
+            print(logOut)
             print("Press Ctrl+C to interrupt execution\n")
             sleep(tlps)
 except KeyboardInterrupt:
-    camera.stop_recording()
+    try:
+        camera.stop_recording()
+    except:
+        pass
     intMsg = "\nInterrupted by user at %s " % datetime.now().strftime(
         "%Y-%m-%d %H:%M:%S"
     )
