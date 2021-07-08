@@ -59,7 +59,7 @@ try:
             startTime = sysTime.strftime("%Y-%m-%d_%H_%M_%S")
             outName = f"/home/pi/LamPi/sync/videos/lampivid_{piNum}_{startTime}.h264"
             print("Starting recording of \n" + outName)
-            camera.start_recording(outName)
+            camera.start_recording(outName, format="h264", bitrate=0, quality=20)
             camera.wait_recording(clipDuration)
             camera.stop_recording()
             cpuTemp = round(CPUTemperature().temperature, 1)
