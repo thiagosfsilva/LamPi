@@ -26,17 +26,15 @@ btn_pinum = sg.OptionMenu(
 btn_res = sg.OptionMenu(
     [
         (640, 480),
-        (800, 600),
-        (960, 720),
-        (1024, 768),
-        (1280, 960),
-        (1400, 1050),
-        (1440, 1080),
+        (1280, 720),
+        (1920, 1080)(1640, 922),
+        (1640, 1232),
+        (3280, 2464),
     ],
     pad=(0.1, 0.1, 0.1, 0.1),
     size=(8, 1),
     key="-RES-",
-    default_value=(640, 480),
+    default_value=(1640, 1232),
 )
 
 # select video framerate
@@ -45,7 +43,7 @@ btn_fps = sg.OptionMenu(
     pad=(0.1, 0.1, 0.1, 0.1),
     size=(8, 1),
     key="-FPS-",
-    default_value=10,
+    default_value=30,
 )
 
 # select clip duration
@@ -54,7 +52,7 @@ btn_clipdur = sg.OptionMenu(
     pad=(0.1, 0.1, 0.1, 0.1),
     size=(8, 1),
     key="-CLDUR-",
-    default_value=10,
+    default_value=60,
 )
 
 sdt = datetime(1900, 1, 1, 15, 0)
@@ -85,7 +83,7 @@ btn_endtime = sg.OptionMenu(
 
 # select daytime timelapse interval
 btn_timelapse = sg.OptionMenu(
-    [1, 2, 5, 10], pad=(0.1, 0.1, 0.1, 0.1), size=(6, 1), key="-TLPS-", default_value=5
+    [1, 2, 3, 5], pad=(0.1, 0.1, 0.1, 0.1), size=(6, 1), key="-TLPS-", default_value=3
 )
 
 # save parameters
