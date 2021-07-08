@@ -4,5 +4,5 @@ Type=Application
 Name=LampiLauncher
 Comment=autostart of lampi python script
 Exec=python3 /home/pi/LamPi/scripts/lampi_ui_terminal.py 
-Icon = /home/pi/LamPi/visual/lampi.jpg
+Icon = /home/pi/LamPi/visual/lampi_icon.png
 Name[en_GB]=LampiLauncher
