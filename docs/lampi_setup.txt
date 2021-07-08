@@ -5,9 +5,13 @@
 
 pip3 install pysimplegui
 
+
+
 2) Install RClone:
 
 curl https://rclone.org/install.sh | sudo bash
+
+
 
 3) Create required folders:
 
@@ -17,14 +21,22 @@ mkdir /home/pi/LamPi/sync/timelapse
 mkdir /home/pi/LamPi/sync/logs
 mkdir /home/pi/.config/autostart
 
+
+
 4) Copy launcher to Desktop:
 
 cp /home/pi/LamPi/launcher/lampi_start.desktop /home/pi/Desktop
 
+
+
 5) Copy autostart file to autostart folder:
+
 cp /home/pi/LamPi/launcher/lampi_autostart.desktop /home/pi/.config/autostart
 
+
+
 6) Start RClone to configure OneDrive sync:
+
 rclone config
 
 - Select "New remote", Name it "OneDrive", select option 26
@@ -32,20 +44,36 @@ for OneDrive remote setup, then everything else default.
 - IMPORTANT: Create a folder called "LamPi" on your base 
 OneDrive folder.
 
+
+
 7) Schedule rclone to copy to OneDrive every 5 minutes:
 
 rclonecmd="rclone copy /home/pi/Lampy/sync/ OneDrive:LamPi 2>&1" 
 rclonejob="*/5 * * * * $rclonecmd"
 ( crontab -l | grep -v -F "$rclonecmd" ; echo "$rclonejob" ) | crontab -
 
-8)Run the LCD setup script (it will reboot the Pi)
+
+
+8) Download LCD drivers:
+
+cd ~
+git clone https://github.com/goodtft/LCD-show.git
+
+
+
+9)Run the LCD setup script (it will reboot the Pi)
 
 sudo home/pi/LCD-show/LCD35-show.sh
 
+- don't forget the sudo!
 - If you need to reactivate HDMI, run "sudo /home/pi/LCD-hdmi.sh
+
+
 
 9) Re-enable Pi camera 
 sudo raspi-config nonint do_camera 0
+
+
 
 10) Only when necessary - to update LamPi from GitHub:
 cd ~/LamPi
