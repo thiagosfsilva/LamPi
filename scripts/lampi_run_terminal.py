@@ -1,8 +1,20 @@
 #!/usr/bin/env python3
 import picamera, shutil, pickle
 from time import sleep
-from datetime import datetime
+from datetime import datetime, time, timedelta
 from gpiozero import CPUTemperature
+
+# Function to test if current time is in range
+def time_in_range(start, end, x):
+    today = datetime.now().date()
+    if start < end:
+        strt = datetime.combine(today,start)
+        endt = datetime.combine(today,end)
+    elif end < start:
+        strt = datetime.combine(today,start)
+        endt = datetime.combine(today+timedelta(days=1),end)
+    result = x >= strt and x <= endt
+    return result
 
 ### Retrieve saved parameters
 params = pickle.load(open("/home/pi/LamPi/params/params.p", "rb"))
@@ -54,7 +66,7 @@ print("Running LamPi script \nSaving on /home/pi/LamPi/sync/videos/")
 try:
     while piNum is not None:
         now = datetime.now().time()
-        if now >= strtm and now <= endtm:
+        if time_in_range(strtm,endtm, now): 
             sysTime = datetime.now()
             startTime = sysTime.strftime("%Y-%m-%d_%H_%M_%S")
             outName = f"/home/pi/LamPi/sync/videos/lampivid_{piNum}_{startTime}.h264"
