@@ -1,5 +1,11 @@
 ## How to setup a new LamPi installation:
 
+0) Update Raspberry OS
+
+sudo apt update
+sudo apt full-upgrade
+
+
 
 1) Install PySimpleGUI:
 
@@ -19,6 +25,7 @@ mkdir /home/pi/LamPi/sync
 mkdir /home/pi/LamPi/sync/videos
 mkdir /home/pi/LamPi/sync/timelapse
 mkdir /home/pi/LamPi/sync/logs
+mkdir /home/pi/LamPi/params
 mkdir /home/pi/.config/autostart
 
 
@@ -48,7 +55,7 @@ OneDrive folder.
 
 7) Schedule rclone to copy to OneDrive every 5 minutes:
 
-rclonecmd="rclone copy /home/pi/Lampy/sync/ OneDrive:LamPi 2>&1" 
+rclonecmd="rclone copy /home/pi/LamPi/sync/ OneDrive:LamPi 2>&1" 
 rclonejob="*/5 * * * * $rclonecmd"
 ( crontab -l | grep -v -F "$rclonecmd" ; echo "$rclonejob" ) | crontab -
 
@@ -70,12 +77,13 @@ sudo home/pi/LCD-show/LCD35-show.sh
 
 
 
-9) Re-enable Pi camera 
+10) Re-enable Pi camera 
 sudo raspi-config nonint do_camera 0
 
+-then reboot again
 
 
-10) Only when necessary - to update LamPi from GitHub:
+11) Only when necessary - to update LamPi from GitHub:
 cd ~/LamPi
 git pull
 
