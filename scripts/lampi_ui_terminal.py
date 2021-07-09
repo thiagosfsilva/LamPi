@@ -56,12 +56,12 @@ btn_clipdur = sg.OptionMenu(
     default_value=60,
 )
 
-sdt = datetime(1900, 1, 1, 5, 0)
-sdt_list = [(sdt + timedelta(minutes=m)).isoformat() for m in range(0, 1440, 60)] #520
+sdt = datetime(1900, 1, 1, 15, 0)
+sdt_list = [(sdt + timedelta(minutes=m)).isoformat() for m in range(0, 520, 60)]  # 520
 st_list = [(datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S")).time() for dt in sdt_list]
 
-edt = datetime(1900, 1, 1, 14, 0)
-edt_list = [(edt + timedelta(minutes=m)).isoformat() for m in range(0, 1440, 60)]
+edt = datetime(1900, 1, 1, 0, 0)
+edt_list = [(edt + timedelta(minutes=m)).isoformat() for m in range(0, 520, 60)]
 et_list = [(datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S")).time() for dt in edt_list]
 
 # select recording start time
