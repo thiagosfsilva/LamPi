@@ -26,19 +26,18 @@ btn_pinum = sg.OptionMenu(
 btn_res = sg.OptionMenu(
     [
         (640, 480),
-	(1296, 972),
-	(1600, 1200),
+        (1296, 972),
         (1640, 1232)
     ],
     pad=(0.1, 0.1, 0.1, 0.1),
     size=(8, 1),
     key="-RES-",
-    default_value=(1640, 1232),
+    default_value=(1296, 972),
 )
 
 # select video framerate
 btn_fps = sg.OptionMenu(
-    [10, 15, 30, 60],
+    [15, 20, 25, 30],
     pad=(0.1, 0.1, 0.1, 0.1),
     size=(8, 1),
     key="-FPS-",
@@ -47,7 +46,7 @@ btn_fps = sg.OptionMenu(
 
 # select clip duration
 btn_clipdur = sg.OptionMenu(
-    [1, 3, 10, 30, 60, 90, 120, 300, 600],
+    [3, 10, 30, 60, 90, 120],
     pad=(0.1, 0.1, 0.1, 0.1),
     size=(8, 1),
     key="-CLDUR-",
