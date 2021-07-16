@@ -24,11 +24,7 @@ btn_pinum = sg.OptionMenu(
 
 # Select video resolution
 btn_res = sg.OptionMenu(
-    [
-        (640, 480),
-        (1296, 972),
-        (1640, 1232)
-    ],
+    [(640, 480), (1296, 972), (1640, 1232)],
     pad=(0.1, 0.1, 0.1, 0.1),
     size=(8, 1),
     key="-RES-",
@@ -81,7 +77,11 @@ btn_endtime = sg.OptionMenu(
 
 # select daytime timelapse interval
 btn_timelapse = sg.OptionMenu(
-    [1, 2, 3, 5], pad=(0.1, 0.1, 0.1, 0.1), size=(6, 1), key="-TLPS-", default_value=3
+    [0, 1, 2, 3, 5],
+    pad=(0.1, 0.1, 0.1, 0.1),
+    size=(6, 1),
+    key="-TLPS-",
+    default_value=3,
 )
 
 # save parameters
@@ -129,14 +129,9 @@ button_row = [[btn_save, btn_start, btn_stop]]
 layout = [
     [
         sg.Column(text_column, pad=(0.1, 0.1, 0.1, 0.1)),
-        sg.Column(
-            option_column,
-            pad=(0.1, 0.1, 0.1, 0.1),
-        ),
+        sg.Column(option_column, pad=(0.1, 0.1, 0.1, 0.1),),
     ],
-    [
-        button_row,
-    ],
+    [button_row,],
 ]
 
 ### App execution ###

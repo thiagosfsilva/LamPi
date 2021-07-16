@@ -83,22 +83,26 @@ try:
             print(logOut)
             print("Click 'Stop'or press Ctrl+C to interrupt execution\n")
         else:
-            # print(tlps)
-            sysTime = datetime.now()
-            startTime = sysTime.strftime("%Y-%m-%d_%H_%M_%S")
-            outName = f"/home/pi/LamPi/sync/timelapse/lampimage_{piNum}_{startTime}.jpg"
-            print("Recording timelapses")
-            camera.capture(outName)
-            cpuTemp = round(CPUTemperature().temperature, 1)
-            diskUsage = shutil.disk_usage("/")
-            diskFree = round(diskUsage.free / (1000000000), 2)
-            logOut = f"\nCPU temp: {cpuTemp}\n Free disk space: {diskFree} Gb\n Last file saved:\n {outName}"
-            logFile = open(logName, "a")
-            logFile.write(logOut)
-            logFile.close()
-            print(logOut)
-            print("Click 'Stop'or press Ctrl+C to interrupt execution\n")
-            sleep(tlps)
+            if tlps == 0:
+                pass
+            else:  # print(tlps)
+                sysTime = datetime.now()
+                startTime = sysTime.strftime("%Y-%m-%d_%H_%M_%S")
+                outName = (
+                    f"/home/pi/LamPi/sync/timelapse/lampimage_{piNum}_{startTime}.jpg"
+                )
+                print("Recording timelapses")
+                camera.capture(outName)
+                cpuTemp = round(CPUTemperature().temperature, 1)
+                diskUsage = shutil.disk_usage("/")
+                diskFree = round(diskUsage.free / (1000000000), 2)
+                logOut = f"\nCPU temp: {cpuTemp}\n Free disk space: {diskFree} Gb\n Last file saved:\n {outName}"
+                logFile = open(logName, "a")
+                logFile.write(logOut)
+                logFile.close()
+                print(logOut)
+                print("Click 'Stop'or press Ctrl+C to interrupt execution\n")
+                sleep(tlps)
 except KeyboardInterrupt:
     try:
         camera.stop_recording()
