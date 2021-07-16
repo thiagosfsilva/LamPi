@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import picamera, shutil, pickle, os
+import picamera, shutil, pickle, os, time as tm
 from datetime import datetime, time
 from gpiozero import CPUTemperature
 
@@ -25,7 +25,6 @@ clipDuration = int(params.get("-CLDUR-"))  # set clip duration in seconds
 piNum = params.get("-PINUM-")  # set raspberry pi identifie
 strtm = datetime.strptime(params["-STRT-"], "%H:%M:%S").time()
 endtm = datetime.strptime(params["-ENDT-"], "%H:%M:%S").time()
-tlps = int(params.get("-TLPS-"))
 
 # Start logfile
 logName = f"/home/pi/LamPi/sync/logs/flopi{piNum}_log.txt"
@@ -38,34 +37,34 @@ logFile.close()
 try:
     while piNum is not None:
         now = datetime.now()
-        if time_in_range(strtm, endtm, now):
+        if time_in_range(strtm, endtm):
             sysTime = datetime.now()
             startTime = sysTime.strftime("%Y-%m-%d_%H_%M_%S")
             outName = f"/home/pi/LamPi/sync/videos/lampivid_{piNum}_{startTime}.h264"
-            print("Recording videos")
+            print(f"Recording {os.path.basename(outName)}")
+            print("Click 'Stop'or press Ctrl+C to interrupt execution\n")
             camera.start_recording(outName, format="h264", bitrate=0, quality=25)
             camera.wait_recording(clipDuration)
             camera.stop_recording()
             cpuTemp = round(CPUTemperature().temperature, 1)
             diskUsage = shutil.disk_usage("/")
             diskFree = round(diskUsage.free / (1000000000), 2)
-            logOut = f"\nCPU temp: {cpuTemp}\n Free disk space: {diskFree} Gb\n Last file saved:\n {outName}"
+            logOut = f"Finished recording\n{outName}\nCPU temp: {cpuTemp}\nFree disk space: {diskFree}Gb"
             logFile = open(logName, "a")
             logFile.write(logOut)
             logFile.close()
-            print(logOut)
-            print("Click 'Stop'or press Ctrl+C to interrupt execution\n")
+            print(logOut)            
         else:
-            try:
-                os.system("rclone copy /home/pi/LamPi/sync/ OneDrive:LamPi -v")
-                sleepTime = (
-                    datetime.combine(datetime.now().date(), strtm)
-                ) - datetime.now()
-                print(
-                    f"Starting rclone cloud syncing - will get back to recording at {strtm}"
-                )
-            except:
-                pass
+            sleepTime = (datetime.combine(datetime.now().date(), strtm) - datetime.now()).total_seconds()
+            #print(sleepTime)
+            logFile = open(logName, "a")
+            logFile.write("Stopped recording at {datetime.now()}")
+            logFile.close()
+            print(
+                f"Starting rclone cloud syncing - will get back to recording at {strtm}"
+            )
+            os.system("rclone copy /home/pi/LamPi/sync/ OneDrive:LamPi -v")
+            tm.sleep(sleepTime)
 
 except KeyboardInterrupt:
     try:
