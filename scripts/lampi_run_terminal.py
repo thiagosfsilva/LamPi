@@ -49,7 +49,7 @@ try:
             cpuTemp = round(CPUTemperature().temperature, 1)
             diskUsage = shutil.disk_usage("/")
             diskFree = round(diskUsage.free / (1000000000), 2)
-            logOut = f"Finished recording\n{outName}\nCPU temp: {cpuTemp}\nFree disk space: {diskFree}Gb"
+            logOut = f"Finished recording\n{outName}\nCPU temp: {cpuTemp}\nFree disk space: {diskFree}Gb\n"
             logFile = open(logName, "a")
             logFile.write(logOut)
             logFile.close()
@@ -58,12 +58,13 @@ try:
             sleepTime = (datetime.combine(datetime.now().date(), strtm) - datetime.now()).total_seconds()
             #print(sleepTime)
             logFile = open(logName, "a")
-            logFile.write("Stopped recording at {datetime.now()}")
+            logMsg = f"Recording loop ended at {datetime.now()\nStarting rcloud syncing..."
+            logFile.write(logMsg)
             logFile.close()
-            print(
-                f"Starting rclone cloud syncing - will get back to recording at {strtm}"
-            )
+            print(logMsg)
             os.system("rclone copy /home/pi/LamPi/sync/ OneDrive:LamPi -v")
+            print(f"Syncing finished.\nGoing to sleep now, will start recording again at {strtm}")
+            print("Zzzzzzzzzz"...")
             tm.sleep(sleepTime)
 
 except KeyboardInterrupt:
