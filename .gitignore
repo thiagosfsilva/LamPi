@@ -1,5 +1,8 @@
+.vscode/
+
 sync/
 
 params/
 
 *.h264
+visual/.DS_Store
