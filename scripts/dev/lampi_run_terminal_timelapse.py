@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-import picamera, shutil, pickle, os
+import picamera, shutil, pickle
+from time import sleep
 from datetime import datetime, time
 from gpiozero import CPUTemperature
 
@@ -33,7 +34,31 @@ strtTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 logFile = open(logName, "a")
 logFile.write(f"\n Script started on {strtTime}.")
 logFile.close()
-#
+# print(
+#  r"""
+#                                 ____________
+#                                /       (O)  \
+#                               / oooooo       \
+#                 ________     /    _________  /
+#         _      /        \   /    /         \/
+#        / \    /  ____    \_/    /
+#       //\ \  /  /    \         /
+#       V  \ \/  /      \       /
+#           \___/        \_____/
+#                _
+#               | |
+#               | | __ _ _ __ ___  _ __  _   _
+#               | |/ _` | '_ ` _ \| '_ \| | | |
+#               | | (_| | | | | | | |_) | |_| |
+#               |_|\__,_|_| |_| |_| .__/ \__. /
+#                                 | |    __/ /
+#                                 |_|   |___/
+# ===============================================================
+#                 """
+# )
+print("Running LamPi script \nSaving on /home/pi/LamPi/sync/videos/")
+# print("\n===============================================================")
+
 # Start recording loop
 try:
     while piNum is not None:
@@ -56,17 +81,26 @@ try:
             print(logOut)
             print("Click 'Stop'or press Ctrl+C to interrupt execution\n")
         else:
-            try:
-                os.system("rclone copy /home/pi/LamPi/sync/ OneDrive:LamPi -v")
-                sleepTime = (
-                    datetime.combine(datetime.now().date(), strtm)
-                ) - datetime.now()
-                print(
-                    f"Starting rclone cloud syncing - will get back to recording at {strtm}"
-                )
-            except:
+            if tlps == 0:
                 pass
-
+            else:  # print(tlps)
+                sysTime = datetime.now()
+                startTime = sysTime.strftime("%Y-%m-%d_%H_%M_%S")
+                outName = (
+                    f"/home/pi/LamPi/sync/timelapse/lampimage_{piNum}_{startTime}.jpg"
+                )
+                print("Recording timelapses")
+                camera.capture(outName)
+                cpuTemp = round(CPUTemperature().temperature, 1)
+                diskUsage = shutil.disk_usage("/")
+                diskFree = round(diskUsage.free / (1000000000), 2)
+                logOut = f"\nCPU temp: {cpuTemp}\n Free disk space: {diskFree} Gb\n Last file saved:\n {outName}"
+                logFile = open(logName, "a")
+                logFile.write(logOut)
+                logFile.close()
+                print(logOut)
+                print("Click 'Stop'or press Ctrl+C to interrupt execution\n")
+                sleep(tlps)
 except KeyboardInterrupt:
     try:
         camera.stop_recording()
