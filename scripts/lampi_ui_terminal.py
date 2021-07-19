@@ -1,5 +1,5 @@
 import PySimpleGUI as sg  # to create and run the UI
-from datetime import datetime, timedelta  # to get date and time
+from datetime import datetime, time  # to get date and time
 import subprocess, signal, pickle
 
 ##### Definefunctions ######
@@ -24,23 +24,16 @@ btn_pinum = sg.OptionMenu(
 
 # Select video resolution
 btn_res = sg.OptionMenu(
-    [
-        (640, 480),
-        (1280, 720),
-        (1920, 1080),
-        (1640, 922),
-        (1640, 1232),
-        (3280, 2464),
-    ],
+    [(640, 480), (1296, 972), (1640, 1232)],
     pad=(0.1, 0.1, 0.1, 0.1),
     size=(8, 1),
     key="-RES-",
-    default_value=(1640, 1232),
+    default_value=(1296, 972),
 )
 
 # select video framerate
 btn_fps = sg.OptionMenu(
-    [10, 15, 30, 60],
+    [15, 20, 25, 30],
     pad=(0.1, 0.1, 0.1, 0.1),
     size=(8, 1),
     key="-FPS-",
@@ -49,43 +42,47 @@ btn_fps = sg.OptionMenu(
 
 # select clip duration
 btn_clipdur = sg.OptionMenu(
-    [1, 3, 10, 30, 60, 90, 120, 300, 600],
+    [3, 10, 30, 60, 90, 120],
     pad=(0.1, 0.1, 0.1, 0.1),
     size=(8, 1),
     key="-CLDUR-",
     default_value=60,
 )
 
-sdt = datetime(1900, 1, 1, 5, 0)
-sdt_list = [(sdt + timedelta(minutes=m)).isoformat() for m in range(0, 1440, 60)] #520
-st_list = [(datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S")).time() for dt in sdt_list]
+#sdt = datetime(1900, 1, 1, 15, 0)
+#sdt_list = [(sdt + timedelta(minutes=m)).isoformat() for m in range(0, 520, 60)]  # 520
+#st_list = [(datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S")).time() for dt in sdt_list]
 
-edt = datetime(1900, 1, 1, 14, 0)
-edt_list = [(edt + timedelta(minutes=m)).isoformat() for m in range(0, 1440, 60)]
-et_list = [(datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S")).time() for dt in edt_list]
+#edt = datetime(1900, 1, 1, 0, 0)
+#edt_list = [(edt + timedelta(minutes=m)).isoformat() for m in range(0, 520, 60)]
+#et_list = [(datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S")).time() for dt in edt_list]
 
 # select recording start time
 btn_strtime = sg.OptionMenu(
-    st_list,
+    [time(2,0),time(4,0),time(12,0),time(15,0),time(16,0),time(17,0),time(18,0),time(19,0),time(20,0),time(2,0),time(21,0),],
     pad=(0.1, 0.1, 0.1, 0.1),
     size=(8, 1),
     key="-STRT-",
-    default_value=st_list[0],
+    default_value=time(15,0),
 )
 
 # select recording end time
 btn_endtime = sg.OptionMenu(
-    et_list,
+    [time(4,0),time(5,0),time(6,0),time(7,0),time(8,0),time(9,0),time(12,0),time(19,0),time(14,0),time(18,0),time(20,0),],
     pad=(0.1, 0.1, 0.1, 0.1),
     size=(8, 1),
     key="-ENDT-",
-    default_value=et_list[6],
+    default_value=time(6,0),
 )
 
 # select daytime timelapse interval
-btn_timelapse = sg.OptionMenu(
-    [1, 2, 3, 5], pad=(0.1, 0.1, 0.1, 0.1), size=(6, 1), key="-TLPS-", default_value=3
-)
+#btn_timelapse = sg.OptionMenu(
+#    [0, 1, 2, 3, 5],
+#    pad=(0.1, 0.1, 0.1, 0.1),
+#    size=(6, 1),
+#    key="-TLPS-",
+#    default_value=3,
+#)
 
 # save parameters
 btn_save = sg.Button("Save", enable_events=True, key="-SAVE-")
@@ -110,7 +107,7 @@ text_column = [
     [sg.Text("Video Resolution")],
     [sg.Text("Video frame rate")],
     [sg.Text("Clip Duration (s)")],
-    [sg.Text("Daytime photo every ")],
+#    [sg.Text("Daytime photo every ")],
     [sg.Text("Video Rec Start")],
     [sg.Text("Video Rec Stop")],
 ]
@@ -121,7 +118,7 @@ option_column = [
     [btn_res],
     [btn_fps],
     [btn_clipdur],
-    [btn_timelapse, sg.Text("s")],
+#    [btn_timelapse, sg.Text("s")],
     [btn_strtime],
     [btn_endtime],
 ]
@@ -132,14 +129,9 @@ button_row = [[btn_save, btn_start, btn_stop]]
 layout = [
     [
         sg.Column(text_column, pad=(0.1, 0.1, 0.1, 0.1)),
-        sg.Column(
-            option_column,
-            pad=(0.1, 0.1, 0.1, 0.1),
-        ),
+        sg.Column(option_column, pad=(0.1, 0.1, 0.1, 0.1),),
     ],
-    [
-        button_row,
-    ],
+    [button_row,],
 ]
 
 ### App execution ###

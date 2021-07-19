@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
-import picamera, shutil, pickle
-from time import sleep
-from datetime import datetime, time, timedelta
+import picamera, shutil, pickle, os, time as tm
+from datetime import datetime, time
 from gpiozero import CPUTemperature
 
 # Function to test if current time is in range
-def time_in_range(start, end, x):
-    today = datetime.now().date()
-    if start < end:
-        strt = datetime.combine(today,start)
-        endt = datetime.combine(today,end)
-    elif end < start:
-        strt = datetime.combine(today,start)
-        endt = datetime.combine(today+timedelta(days=1),end)
-    result = x >= strt and x <= endt
-    return result
+def time_in_range(start, end):
+    now = datetime.now().time()
+    preMidnight = time(23, 59, 59)
+    midnight = time(0, 0, 0)
+    if (now >= start and now <= preMidnight) or (now >= midnight and now <= end):
+        return True
+    else:
+        return False
+
 
 ### Retrieve saved parameters
 params = pickle.load(open("/home/pi/LamPi/params/params.p", "rb"))
@@ -25,11 +23,8 @@ camera.resolution = eval(params["-RES-"])  # set video resolution
 camera.framerate = int(params.get("-FPS-"))  # set video framerate
 clipDuration = int(params.get("-CLDUR-"))  # set clip duration in seconds
 piNum = params.get("-PINUM-")  # set raspberry pi identifie
-strtm = params["-STRT-"]
-endtm = params.get("-ENDT-")
-strtm = datetime.strptime(strtm, "%H:%M:%S").time()
-endtm = datetime.strptime(endtm, "%H:%M:%S").time()
-tlps = int(params.get("-TLPS-"))
+strtm = datetime.strptime(params["-STRT-"], "%H:%M:%S").time()
+endtm = datetime.strptime(params["-ENDT-"], "%H:%M:%S").time()
 
 # Start logfile
 logName = f"/home/pi/LamPi/sync/logs/flopi{piNum}_log.txt"
@@ -37,76 +32,41 @@ strtTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 logFile = open(logName, "a")
 logFile.write(f"\n Script started on {strtTime}.")
 logFile.close()
-# print(
-#  r"""
-#                                 ____________
-#                                /       (O)  \
-#                               / oooooo       \
-#                 ________     /    _________  /
-#         _      /        \   /    /         \/
-#        / \    /  ____    \_/    /
-#       //\ \  /  /    \         /
-#       V  \ \/  /      \       /
-#           \___/        \_____/
-#                _
-#               | |
-#               | | __ _ _ __ ___  _ __  _   _
-#               | |/ _` | '_ ` _ \| '_ \| | | |
-#               | | (_| | | | | | | |_) | |_| |
-#               |_|\__,_|_| |_| |_| .__/ \__. /
-#                                 | |    __/ /
-#                                 |_|   |___/
-# ===============================================================
-#                 """
-# )
-print("Running LamPi script \nSaving on /home/pi/LamPi/sync/videos/")
-# print("\n===============================================================")
-
+#
 # Start recording loop
 try:
     while piNum is not None:
-        now = datetime.now().time()
-        if time_in_range(strtm,endtm, now): 
+        now = datetime.now()
+        if time_in_range(strtm, endtm):
             sysTime = datetime.now()
             startTime = sysTime.strftime("%Y-%m-%d_%H_%M_%S")
             outName = f"/home/pi/LamPi/sync/videos/lampivid_{piNum}_{startTime}.h264"
-            print("Starting recording of \n" + outName)
-            camera.start_recording(outName, format="h264", bitrate=0, quality=20)
+            print(f"Recording {os.path.basename(outName)}")
+            print("Click 'Stop'or press Ctrl+C to interrupt execution\n")
+            camera.start_recording(outName, format="h264", bitrate=0, quality=25)
             camera.wait_recording(clipDuration)
             camera.stop_recording()
             cpuTemp = round(CPUTemperature().temperature, 1)
             diskUsage = shutil.disk_usage("/")
             diskFree = round(diskUsage.free / (1000000000), 2)
-            logOut = "\nCPU temp: %s, free disk space: %s Gb, last file: %s" % (
-                cpuTemp,
-                diskFree,
-                outName,
-            )
+            logOut = f"Finished recording\n{outName}\nCPU temp: {cpuTemp}\nFree disk space: {diskFree}Gb\n"
             logFile = open(logName, "a")
             logFile.write(logOut)
             logFile.close()
-            print("Recording finished.  " + " ".join(logOut.split(", ")[:-1]))
-            print("Press Ctrl+C to interrupt execution\n")
+            print(logOut)            
         else:
-            # print(tlps)
-            sysTime = datetime.now()
-            startTime = sysTime.strftime("%Y-%m-%d_%H_%M_%S")
-            outName = f"/home/pi/LamPi/sync/timelapse/lampimage_{piNum}_{startTime}.jpg"
-            camera.capture(outName)
-            cpuTemp = round(CPUTemperature().temperature, 1)
-            diskUsage = shutil.disk_usage("/")
-            diskFree = round(diskUsage.free / (1000000000), 2)
-            logOut = "\nCPU temp: %s, free disk space: %s Gb, last file: %s" % (
-                cpuTemp,
-                diskFree,
-                outName,
-            )
+            sleepTime = (datetime.combine(datetime.now().date(), strtm) - datetime.now()).total_seconds()
+            #print(sleepTime)
             logFile = open(logName, "a")
-            logFile.write(logOut)
+            logMsg = f"Recording loop ended at {datetime.now()\nStarting rcloud syncing..."
+            logFile.write(logMsg)
             logFile.close()
-            print(logOut)
-            print("Press Ctrl+C to interrupt execution\n")
-            sleep(tlps)
+            print(logMsg)
+            os.system("rclone copy /home/pi/LamPi/sync/ OneDrive:LamPi -v")
+            print(f"Syncing finished.\nGoing to sleep now, will start recording again at {strtm}")
+            print("Zzzzzzzzzz"...")
+            tm.sleep(sleepTime)
+
 except KeyboardInterrupt:
     try:
         camera.stop_recording()

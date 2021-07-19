@@ -1,7 +1,13 @@
+.vscode/
+
 sync/
 
 params/
 
 *.h264
+<<<<<<< HEAD
 
 .vscode/
+=======
+visual/.DS_Store
+>>>>>>> main
