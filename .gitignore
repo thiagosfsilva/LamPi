@@ -3,3 +3,5 @@ sync/
 params/
 
 *.h264
+
+.vscode/

@@ -1,5 +1,7 @@
 {
     "python.pythonPath": "/bin/python3",
     "python.formatting.provider": "black",
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "code-runner.saveFileBeforeRun": true,
+    "code-runner.runInTerminal": true
 }
