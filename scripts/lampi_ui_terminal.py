@@ -15,7 +15,7 @@ def save_params(params):
 
 # Select pi number
 btn_pinum = sg.OptionMenu(
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    ,
     pad=(0.1, 0.1, 0.1, 0.1),
     key="-PINUM-",
     size=(8, 1),
