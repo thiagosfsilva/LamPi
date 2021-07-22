@@ -77,6 +77,7 @@ try:
             )
             camera.wait_recording(clipDuration)
             camera.stop_recording()
+<<<<<<< HEAD
             pi_log(logName, outName)
             sync_flag = 0
 
@@ -91,6 +92,28 @@ try:
                 pi_log(logName, "Sleeping")
                 tm.sleep(60)
 
+=======
+            cpuTemp = round(CPUTemperature().temperature, 1)
+            diskUsage = shutil.disk_usage("/")
+            diskFree = round(diskUsage.free / (1000000000), 2)
+            logOut = f"Finished recording\n{outName}\nCPU temp: {cpuTemp}\nFree disk space: {diskFree}Gb\n"
+            logFile = open(logName, "a")
+            logFile.write(logOut)
+            logFile.close()
+            print(logOut)            
+        else:
+            sleepTime = (datetime.combine(datetime.now().date(), strtm) - datetime.now()).total_seconds()
+            #print(sleepTime)
+            logFile = open(logName, "a")
+            logMsg = f"Recording loop ended at {datetime.now()\nStarting rcloud syncing..."
+            logFile.write(logMsg)
+            logFile.close()
+            print(logMsg)
+            os.system("rclone copy /home/pi/LamPi/sync/ OneDrive:LamPi -v")
+            print(f"Syncing finished.\nGoing to sleep now, will start recording again at {strtm}")
+            print("Zzzzzzzzzz"...")
+            tm.sleep(sleepTime)
+>>>>>>> 6e0eea450a00d0b7b3187e1e665137ff4326a98c
 
 except KeyboardInterrupt:
     try:

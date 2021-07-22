@@ -107,7 +107,7 @@ text_column = [
     [sg.Text("Video Resolution")],
     [sg.Text("Video frame rate")],
     [sg.Text("Clip Duration (s)")],
-    [sg.Text("Daytime photo every ")],
+#    [sg.Text("Daytime photo every ")],
     [sg.Text("Video Rec Start")],
     [sg.Text("Video Rec Stop")],
 ]
