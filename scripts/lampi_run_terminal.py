@@ -10,10 +10,9 @@ def time_in_range(start, end):
     now = datetime.now().time()
     preMidnight = time(23, 59, 59)
     midnight = time(0, 0, 0)
-    if (start <= preMidnight) and (end <= preMidnight):
-        if (now >= start and now <= end):
-            return True
-    elif 
+    if (now >= start and now <= preMidnight) or (now >= midnight and now <= end):
+        return True
+    else:
         return False
 
 
