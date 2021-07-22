@@ -24,11 +24,11 @@ btn_pinum = sg.Combo(
 
 # Select video resolution
 btn_res = sg.Combo(
-    [(640, 480), (1296, 972), (1640, 1232)],
+    ["640x480", "1296x972", "1640x1232"],
     pad=(0, 3),
     size=(8, None),
     key="-RES-",
-    default_value=(1296, 972),
+    default_value="1296x972",
 )
 
 # select video framerate

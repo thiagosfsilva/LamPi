@@ -6,22 +6,18 @@ from gpiozero import CPUTemperature, DiskUsage, LoadAverage
 from shutil import disk_usage
 
 # Function to test if current time is in range
-def time_in_range(end):
+def time_in_range():
     global start
+    global stop
     global recstatus
     now = datetime.now()
-    stop = start + end
     if now < start:
-        print(f"{now} is before {start}, so I'm waiting")
         recstatus = "wait"
     elif now >= start and now <= stop:
-        print(f"{now} is after {start} and before {stop}, so I'm recording")
         recstatus = "rec"
     else:
         start = start + timedelta(days=1)
-        print(
-            f"{now} is after {start} and {stop}, so I'm syncing and then waiting until {start}"
-        )
+        stop = stop + timedelta(days=1)
         recstatus = "sync"
 
 
@@ -31,14 +27,18 @@ def pi_log(logName, outName):
     cpuTemp = round(CPUTemperature().temperature, 1)
     diskUsageGb = disk_usage("/")
     diskFree = round(diskUsageGb.free / (1000000000), 2)
-    diskUsagePercent = DiskUsage()
-    loadCPU = LoadAverage(min_load_average=0, max_load_average=1, minutes=1)
+    diskUsagePercent = DiskUsage().usage
+    loadCPU = LoadAverage(
+        min_load_average=0, max_load_average=1, minutes=1
+    ).load_average
     outName = os.path.basename(outName)
-    logMessage = f"{now}\tTest\t{loadCPU}\t{cpuTemp}\t{round(diskUsagePercent.usage,2)}\t{diskFree}\n"
+    logMessage = (
+        f"{now}\t{outName}\t{loadCPU}\t{cpuTemp}\t{round(diskUsagePercent,2)}\t{diskFree}\n"
+    )
     logFile = open(logName, "a")
     logFile.write(logMessage)
     logFile.close()
-    print(logMessage)
+    print(f"CPU:{loadCPU}%,{cpuTemp}°C; {diskFree} Gb left")
 
 
 ### Retrieve saved parameters
@@ -46,12 +46,13 @@ params = pickle.load(open("/home/pi/LamPi/params/params.p", "rb"))
 
 ### Set recording parameters here
 camera = picamera.PiCamera()
-camera.resolution = eval(params["-RES-"])  # set video resolution
+camera.resolution = params["-RES-"]  # set video resolution
 camera.framerate = int(params.get("-FPS-"))  # set video framerate
 clipDuration = int(params.get("-CLDUR-"))  # set clip duration in seconds
 piNum = params.get("-PINUM-")  # set raspberry pi identifie
-start = datetime.combine(datetime.now(), time(params["STARTHR"], params["STARTMIN"]))
+start = datetime.combine(datetime.now(), time(params["-STRTHR-"], params["-STRTMIN-"]))
 end = timedelta(hours=params["-RECLEN-"])
+stop = start + end
 recstatus = "wait"
 
 # Start recording logfile
@@ -64,21 +65,20 @@ recstatus = "wait"
 # Start pi logfile
 logName = f"/home/pi/LamPi/sync/logs/flopi{piNum}_log.txt"
 logFile = open(logName, "a")
-logHeader = "Time\tFile_name\tCPU_load\tCPU_temp\tPercent_disk_used\tFree_disk_Gb"
+logHeader = "Time\tFile_name\tCPU_load\tCPU_temp\tPercent_disk_used\tFree_disk_Gb\n"
 logFile.write(logHeader)
 logFile.close()
-
-sync_flag = 0
 
 # Start recording loop
 try:
     while piNum is not None:
-        time_in_range(end)
+        time_in_range()
         if recstatus == "rec":
             sysTime = datetime.now()
             startTime = sysTime.strftime("%Y-%m-%d_%H_%M_%S")
             outName = f"/home/pi/LamPi/sync/videos/lampivid_{piNum}_{startTime}.h264"
             motionName = f"/home/pi/LamPi/sync/videos/lampivid_{piNum}_{startTime}.mot"
+            print(f"{sysTime} is after {start} and before {stop}, so I'm recording")
             # print(f"Recording {os.path.basename(outName)}")
             # print("Click 'Stop'or press Ctrl+C to interrupt execution\n")
             camera.start_recording(
@@ -87,15 +87,24 @@ try:
             camera.wait_recording(clipDuration)
             camera.stop_recording()
             pi_log(logName, outName)
+
         elif recstatus == "sync":
+            sysTime = datetime.now()
+            print(
+                f"{sysTime} is after {start} and {stop}, so I'm syncing and then waiting until {start}"
+            )
             os.system(
                 "rclone copy /home/pi/LamPi/sync/ OneDrive:LamPi -v --checkers 1 --multi-thread-streams 1 --transfers 1"
             )
-            pi_log("Started Sync", "NA")
+            pi_log(logName, "Started Sync")
+
             # print(f"Syncing finished.\nGoing to sleep now, will start recording again at {start}")
             # print("Zzzzzzzzzz"...")
         elif recstatus == "wait":
-            pi_log("Waiting", "NA")
+            sysTime = datetime.now()
+            print(f"{sysTime} is before {start}, so I'm waiting")
+            pi_log(logName, "Waiting")
+            tm.sleep(60)
         else:
             print("something went wrong")
             break
