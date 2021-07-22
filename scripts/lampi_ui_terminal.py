@@ -14,75 +14,83 @@ def save_params(params):
 # Buttons #
 
 # Select pi number
-btn_pinum = sg.OptionMenu(
+btn_pinum = sg.Combo(
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-    pad=(0.1, 0.1, 0.1, 0.1),
+    pad=((0, 0), (4, 3)),
     key="-PINUM-",
-    size=(8, 1),
+    size=(8, None),
     default_value=1,
 )
 
 # Select video resolution
-btn_res = sg.OptionMenu(
+btn_res = sg.Combo(
     [(640, 480), (1296, 972), (1640, 1232)],
-    pad=(0.1, 0.1, 0.1, 0.1),
-    size=(8, 1),
+    pad=(0, 3),
+    size=(8, None),
     key="-RES-",
     default_value=(1296, 972),
 )
 
 # select video framerate
-btn_fps = sg.OptionMenu(
+btn_fps = sg.Combo(
     [15, 20, 25, 30],
-    pad=(0.1, 0.1, 0.1, 0.1),
-    size=(8, 1),
+    pad=(0, 3),
+    size=(8, None),
     key="-FPS-",
     default_value=30,
 )
 
 # select clip duration
-btn_clipdur = sg.OptionMenu(
+btn_clipdur = sg.Combo(
     [3, 10, 30, 60, 90, 120],
-    pad=(0.1, 0.1, 0.1, 0.1),
-    size=(8, 1),
+    pad=(0, 3),
+    size=(8, None),
     key="-CLDUR-",
     default_value=60,
 )
 
-#sdt = datetime(1900, 1, 1, 15, 0)
-#sdt_list = [(sdt + timedelta(minutes=m)).isoformat() for m in range(0, 520, 60)]  # 520
-#st_list = [(datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S")).time() for dt in sdt_list]
+# sdt = datetime(1900, 1, 1, 15, 0)
+# sdt_list = [(sdt + timedelta(minutes=m)).isoformat() for m in range(0, 520, 60)]  # 520
+# st_list = [(datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S")).time() for dt in sdt_list]
 
-#edt = datetime(1900, 1, 1, 0, 0)
-#edt_list = [(edt + timedelta(minutes=m)).isoformat() for m in range(0, 520, 60)]
-#et_list = [(datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S")).time() for dt in edt_list]
+# edt = datetime(1900, 1, 1, 0, 0)
+# edt_list = [(edt + timedelta(minutes=m)).isoformat() for m in range(0, 520, 60)]
+# et_list = [(datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S")).time() for dt in edt_list]
 
 # select recording start time
-btn_strtime = sg.OptionMenu(
-    [time(2,0),time(4,0),time(12,0),time(15,0),time(16,0),time(17,0),time(18,0),time(19,0),time(20,0),time(2,0),time(21,0),],
-    pad=(0.1, 0.1, 0.1, 0.1),
-    size=(8, 1),
-    key="-STRT-",
-    default_value=time(15,0),
+btn_strt_hr = sg.Combo(
+    list(range(0, 23)),
+    pad=(0, 3),
+    size=(2, None),
+    key="-STRTHR-",
+    default_value=17,
 )
 
 # select recording end time
-btn_endtime = sg.OptionMenu(
-    [time(4,0),time(5,0),time(6,0),time(7,0),time(8,0),time(9,0),time(12,0),time(19,0),time(14,0),time(18,0),time(20,0),],
-    pad=(0.1, 0.1, 0.1, 0.1),
-    size=(8, 1),
-    key="-ENDT-",
-    default_value=time(6,0),
+btn_strt_min = sg.Combo(
+    [0, 10, 20, 30, 40, 50],
+    pad=(0, 3),
+    size=(2, None),
+    key="-STRTMIN-",
+    default_value=0,
+)
+
+btn_length = sg.Combo(
+    list(range(0, 23)),
+    pad=(0, 3),
+    size=(8, None),
+    key="-RECLEN-",
+    default_value=12,
 )
 
 # select daytime timelapse interval
-#btn_timelapse = sg.OptionMenu(
+# btn_timelapse = sg.OptionMenu(
 #    [0, 1, 2, 3, 5],
 #    pad=(0.1, 0.1, 0.1, 0.1),
 #    size=(6, 1),
 #    key="-TLPS-",
 #    default_value=3,
-#)
+# )
 
 # save parameters
 btn_save = sg.Button("Save", enable_events=True, key="-SAVE-")
@@ -94,7 +102,7 @@ btn_start = sg.Button("Start", enable_events=True, key="-START-", disabled=True)
 btn_stop = sg.Button("Stop", enable_events=True, key="-STOP-", disabled=True)
 
 # quit app
-btn_quit = sg.Button("Quit", enable_events=True, key="-QUIT-", disabled=False)
+# btn_quit = sg.Button("Quit", enable_events=True, key="-QUIT-", disabled=False)
 
 ## UI Layout and appearance ##
 
@@ -107,9 +115,9 @@ text_column = [
     [sg.Text("Video Resolution")],
     [sg.Text("Video frame rate")],
     [sg.Text("Clip Duration (s)")],
-#    [sg.Text("Daytime photo every ")],
-    [sg.Text("Video Rec Start")],
-    [sg.Text("Video Rec Stop")],
+    #    [sg.Text("Daytime photo every ")],
+    [sg.Text("Start at (HH:MM)")],
+    [sg.Text("Record for (hours)")],
 ]
 
 #  Set right (options) layout
@@ -118,9 +126,9 @@ option_column = [
     [btn_res],
     [btn_fps],
     [btn_clipdur],
-#    [btn_timelapse, sg.Text("s")],
-    [btn_strtime],
-    [btn_endtime],
+    #    [btn_timelapse, sg.Text("s")],
+    [btn_strt_hr, sg.Text(":", pad=(0, 0)), btn_strt_min],
+    [btn_length],
 ]
 
 button_row = [[btn_save, btn_start, btn_stop]]
@@ -128,10 +136,22 @@ button_row = [[btn_save, btn_start, btn_stop]]
 # Set 2-column window layout
 layout = [
     [
-        sg.Column(text_column, pad=(0.1, 0.1, 0.1, 0.1)),
-        sg.Column(option_column, pad=(0.1, 0.1, 0.1, 0.1),),
+        sg.Column(
+            text_column,
+            element_justification="left",
+            vertical_alignment="top",
+            pad=(0, 1),
+        ),
+        sg.Column(
+            option_column,
+            element_justification="center",
+            vertical_alignment="top",
+            pad=(0, 1),
+        ),
     ],
-    [button_row,],
+    [
+        button_row,
+    ],
 ]
 
 ### App execution ###
@@ -140,7 +160,7 @@ layout = [
 window = sg.Window(
     "LamPi UI",
     layout,
-    size=(240, 320),
+    size=(190, 210),
     location=(0, 0),
     margins=(0, 0),
     element_justification="c",
