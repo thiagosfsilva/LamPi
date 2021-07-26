@@ -32,9 +32,7 @@ def pi_log(logName, outName):
         min_load_average=0, max_load_average=1, minutes=1
     ).load_average
     outName = os.path.basename(outName)
-    logMessage = (
-        f"{now}\t{outName}\t{loadCPU}\t{cpuTemp}\t{round(diskUsagePercent,2)}\t{diskFree}\n"
-    )
+    logMessage = f"{now}\t{outName}\t{loadCPU}\t{cpuTemp}\t{round(diskUsagePercent,2)}\t{diskFree}\n"
     logFile = open(logName, "a")
     logFile.write(logMessage)
     logFile.close()
@@ -77,12 +75,15 @@ try:
             sysTime = datetime.now()
             startTime = sysTime.strftime("%Y-%m-%d_%H_%M_%S")
             outName = f"/home/pi/LamPi/sync/videos/lampivid_{piNum}_{startTime}.h264"
-            motionName = f"/home/pi/LamPi/sync/videos/lampivid_{piNum}_{startTime}.mot"
+            # motionName = f"/home/pi/LamPi/sync/videos/lampivid_{piNum}_{startTime}.mot"
             print(f"{sysTime} is after {start} and before {stop}, so I'm recording")
             # print(f"Recording {os.path.basename(outName)}")
             # print("Click 'Stop'or press Ctrl+C to interrupt execution\n")
             camera.start_recording(
-                outName, format="h264", bitrate=0, quality=25, motion_output=motionName
+                outName,
+                format="h264",
+                bitrate=2000000,
+                quality=0,  # motion_output=motionName
             )
             camera.wait_recording(clipDuration)
             camera.stop_recording()
@@ -94,7 +95,7 @@ try:
                 f"{sysTime} is after {start} and {stop}, so I'm syncing and then waiting until {start}"
             )
             os.system(
-                "rclone copy /home/pi/LamPi/sync/ OneDrive:LamPi -v --checkers 1 --multi-thread-streams 1 --transfers 1"
+                "rclone copy /home/pi/LamPi/sync/ OneDrive:LamPi/test_flopi1 -v --checkers 1 --multi-thread-streams 1 --transfers 1"
             )
             pi_log(logName, "Started Sync")
 
