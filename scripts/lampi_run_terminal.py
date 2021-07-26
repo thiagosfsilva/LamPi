@@ -1,17 +1,42 @@
 #!/usr/bin/env python3
-import picamera, shutil, pickle, os, time as tm
-from datetime import datetime, time
-from gpiozero import CPUTemperature
+from gpiozero.internal_devices import LoadAverage
+import picamera, pickle, os, time as tm
+from datetime import datetime, time, timedelta
+from gpiozero import CPUTemperature, DiskUsage, LoadAverage
+from shutil import disk_usage
 
 # Function to test if current time is in range
-def time_in_range(start, end):
-    now = datetime.now().time()
-    preMidnight = time(23, 59, 59)
-    midnight = time(0, 0, 0)
-    if (now >= start and now <= preMidnight) or (now >= midnight and now <= end):
-        return True
+def time_in_range():
+    global start
+    global stop
+    global recstatus
+    now = datetime.now()
+    if now < start:
+        recstatus = "wait"
+    elif now >= start and now <= stop:
+        recstatus = "rec"
     else:
-        return False
+        start = start + timedelta(days=1)
+        stop = stop + timedelta(days=1)
+        recstatus = "sync"
+
+
+# Function to everything
+def pi_log(logName, outName):
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cpuTemp = round(CPUTemperature().temperature, 1)
+    diskUsageGb = disk_usage("/")
+    diskFree = round(diskUsageGb.free / (1000000000), 2)
+    diskUsagePercent = DiskUsage().usage
+    loadCPU = LoadAverage(
+        min_load_average=0, max_load_average=1, minutes=1
+    ).load_average
+    outName = os.path.basename(outName)
+    logMessage = f"{now}\t{outName}\t{loadCPU}\t{cpuTemp}\t{round(diskUsagePercent,2)}\t{diskFree}\n"
+    logFile = open(logName, "a")
+    logFile.write(logMessage)
+    logFile.close()
+    print(f"CPU:{loadCPU}%,{cpuTemp}°C; {diskFree} Gb left")
 
 
 ### Retrieve saved parameters
@@ -19,53 +44,63 @@ params = pickle.load(open("/home/pi/LamPi/params/params.p", "rb"))
 
 ### Set recording parameters here
 camera = picamera.PiCamera()
-camera.resolution = eval(params["-RES-"])  # set video resolution
+camera.resolution = params["-RES-"]  # set video resolution
 camera.framerate = int(params.get("-FPS-"))  # set video framerate
 clipDuration = int(params.get("-CLDUR-"))  # set clip duration in seconds
 piNum = params.get("-PINUM-")  # set raspberry pi identifie
-strtm = datetime.strptime(params["-STRT-"], "%H:%M:%S").time()
-endtm = datetime.strptime(params["-ENDT-"], "%H:%M:%S").time()
+start = datetime.combine(datetime.now(), time(params["-STRTHR-"], params["-STRTMIN-"]))
+end = timedelta(hours=params["-RECLEN-"])
+stop = start + end
+recstatus = "wait"
 
-# Start logfile
+# Start pi logfile
 logName = f"/home/pi/LamPi/sync/logs/flopi{piNum}_log.txt"
-strtTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 logFile = open(logName, "a")
-logFile.write(f"\n Script started on {strtTime}.")
+logHeader = "Time\tFile_name\tCPU_load\tCPU_temp\tPercent_disk_used\tFree_disk_Gb\n"
+logFile.write(logHeader)
 logFile.close()
-#
+
 # Start recording loop
 try:
     while piNum is not None:
-        now = datetime.now()
-        if time_in_range(strtm, endtm):
+        time_in_range()
+        if recstatus == "rec":
             sysTime = datetime.now()
             startTime = sysTime.strftime("%Y-%m-%d_%H_%M_%S")
-            outName = f"/home/pi/LamPi/sync/videos/lampivid_{piNum}_{startTime}.h264"
-            print(f"Recording {os.path.basename(outName)}")
-            print("Click 'Stop'or press Ctrl+C to interrupt execution\n")
-            camera.start_recording(outName, format="h264", bitrate=0, quality=25)
+            outName = f"/home/pi/LamPi/sync/videos/lampivid_{piNum}_{startTime}.h264"            # motionName = f"/home/pi/LamPi/sync/videos/lampivid_{piNum}_{startTime}.mot"
+            print(f"\nRecording {os.path.basename(outName)}")
+            print(f"Recording will stop on {stop}")
+            # print("Click 'Stop'or press Ctrl+C to interrupt execution\n")
+            camera.start_recording(
+                outName,
+                format="h264",
+                bitrate=2000000,
+                quality=0,  # motion_output=motionName
+            )
             camera.wait_recording(clipDuration)
             camera.stop_recording()
-            cpuTemp = round(CPUTemperature().temperature, 1)
-            diskUsage = shutil.disk_usage("/")
-            diskFree = round(diskUsage.free / (1000000000), 2)
-            logOut = f"Finished recording\n{outName}\nCPU temp: {cpuTemp}\nFree disk space: {diskFree}Gb\n"
-            logFile = open(logName, "a")
-            logFile.write(logOut)
-            logFile.close()
-            print(logOut)            
+            pi_log(logName, outName)
+
+        elif recstatus == "sync":
+            sysTime = datetime.now()
+            stopTime = sysTime.strftime("%Y-%m-%d_%H_%M_%S")
+            print(
+                f"Recording stopped on {stopTime}.\nStarting rclone sync.\n"
+            )
+            os.system(
+                f"rclone copy /home/pi/LamPi/sync/ OneDrive:LamPi/flopi{piNum} -v --checkers 1 --multi-thread-streams 1 --transfers 1"
+            )
+            pi_log(logName, "Started Sync")
+
+        elif recstatus == "wait":
+            sysTime = datetime.now()
+            waiTime = sysTime.strftime("%Y-%m-%d_%H_%M_%S")
+            print(f"\nCurrent time is {waiTime}.\nWill restart recording on {start}")
+            pi_log(logName, "Waiting")
+            tm.sleep(60)
         else:
-            sleepTime = (datetime.combine(datetime.now().date(), strtm) - datetime.now()).total_seconds()
-            #print(sleepTime)
-            logFile = open(logName, "a")
-            logMsg = f"Recording loop ended at {datetime.now()\nStarting rcloud syncing..."
-            logFile.write(logMsg)
-            logFile.close()
-            print(logMsg)
-            os.system("rclone copy /home/pi/LamPi/sync/ OneDrive:LamPi -v")
-            print(f"Syncing finished.\nGoing to sleep now, will start recording again at {strtm}")
-            print("Zzzzzzzzzz"...")
-            tm.sleep(sleepTime)
+            print("something went wrong")
+            break
 
 except KeyboardInterrupt:
     try:
@@ -75,9 +110,9 @@ except KeyboardInterrupt:
     intMsg = "\nInterrupted by user at %s " % datetime.now().strftime(
         "%Y-%m-%d %H:%M:%S"
     )
-    logFile = open(logName, "a")
-    logFile.write(intMsg)
-    logFile.close()
+    # logFile = open(logName, "a")
+    # logFile.write(intMsg)
+    # logFile.close()
     print(intMsg)
-    print("\nYou may now close this window")
+    # print("\nYou may now close this window")
     pass
