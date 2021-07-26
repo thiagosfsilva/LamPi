@@ -1,6 +1,6 @@
 from kivymd.app import MDApp
 from kivy.uix.screenmanager import Screen
-from kivymd.uix.label import MDLabel
+# from kivymd.uix.label import MDLabel
 from kivymd.uix.button import MDRectangleFlatButton
 
 

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1 (c4e8f9e, 2021-05-24)"
+   sodipodi:docname="desktop-bg-template.svg"
+   inkscape:export-filename="/Users/thiago/Projects/LamPi/visual/desktop-bg-flopi4.png"
+   inkscape:export-xdpi="73.030479"
+   inkscape:export-ydpi="73.030479"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.55678311"
+     inkscape:cx="62.861102"
+     inkscape:cy="561.25984"
+     inkscape:window-width="1312"
+     inkscape:window-height="847"
+     inkscape:window-x="0"
+     inkscape:window-y="25"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#003865;fill-rule:evenodd;stroke-width:0.147235;fill-opacity:1"
+       id="rect31"
+       width="166.944"
+       height="111.296"
+       x="25.1856"
+       y="66.052803" />
+    <image
+       preserveAspectRatio="none"
+       inkscape:svg-dpi="96"
+       width="56.985649"
+       height="80.593994"
+       xlink:href="lampi-logo.svg"
+       id="image831"
+       x="120.71998"
+       y="75.991249" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:16.6021px;line-height:1.25;font-family:sans-serif;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.222349"
+       x="129.14354"
+       y="158.21529"
+       id="text1947"
+       transform="scale(0.99298289,1.0070667)"><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:16.6021px;font-family:ubuntu;-inkscape-font-specification:ubuntu;fill:#ffffff;stroke-width:0.222349"
+         x="129.14354"
+         y="158.21529"
+         id="tspan1949">flopi4</tspan></text>
+  </g>
+</svg>
