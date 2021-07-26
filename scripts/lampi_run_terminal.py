@@ -95,7 +95,7 @@ try:
         elif recstatus == "wait":
             sysTime = datetime.now()
             waiTime = sysTime.strftime("%Y-%m-%d_%H_%M_%S")
-            print(f"\nCurrent time is {waiTime}\n. Will restart recording on {start}")
+            print(f"\nCurrent time is {waiTime}.\nWill restart recording on {start}")
             pi_log(logName, "Waiting")
             tm.sleep(60)
         else:

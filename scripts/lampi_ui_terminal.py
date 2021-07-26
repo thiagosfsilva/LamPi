@@ -182,7 +182,7 @@ while True:
     elif event == "-START-":
         command = [
             "lxterminal",
-            "--geometry=31x18+241+1",
+            "--geometry=477x274+4+68",
             "-e",
             "python3",
             "/home/pi/LamPi/scripts/lampi_run_terminal.py",
