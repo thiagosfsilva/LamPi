@@ -53,13 +53,6 @@ end = timedelta(hours=params["-RECLEN-"])
 stop = start + end
 recstatus = "wait"
 
-# Start recording logfile
-# logName = f"/home/pi/LamPi/sync/logs/flopi{piNum}_rec_log.txt"
-# strtTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-# logFile = open(logName, "a")
-# logFile.write(f"\n Script started on {strtTime}.")
-# logFile.close()
-
 # Start pi logfile
 logName = f"/home/pi/LamPi/sync/logs/flopi{piNum}_log.txt"
 logFile = open(logName, "a")
@@ -74,10 +67,9 @@ try:
         if recstatus == "rec":
             sysTime = datetime.now()
             startTime = sysTime.strftime("%Y-%m-%d_%H_%M_%S")
-            outName = f"/home/pi/LamPi/sync/videos/lampivid_{piNum}_{startTime}.h264"
-            # motionName = f"/home/pi/LamPi/sync/videos/lampivid_{piNum}_{startTime}.mot"
-            print(f"{sysTime} is after {start} and before {stop}, so I'm recording")
-            # print(f"Recording {os.path.basename(outName)}")
+            outName = f"/home/pi/LamPi/sync/videos/lampivid_{piNum}_{startTime}.h264"            # motionName = f"/home/pi/LamPi/sync/videos/lampivid_{piNum}_{startTime}.mot"
+            print(f"\nRecording {os.path.basename(outName)}")
+            print(f"Recording will stop on {stop}")
             # print("Click 'Stop'or press Ctrl+C to interrupt execution\n")
             camera.start_recording(
                 outName,
@@ -91,19 +83,19 @@ try:
 
         elif recstatus == "sync":
             sysTime = datetime.now()
+            stopTime = sysTime.strftime("%Y-%m-%d_%H_%M_%S")
             print(
-                f"{sysTime} is after {start} and {stop}, so I'm syncing and then waiting until {start}"
+                f"Recording stopped on {stopTime}.\nStarting rclone sync.\n"
             )
             os.system(
-                "rclone copy /home/pi/LamPi/sync/ OneDrive:LamPi/test_flopi1 -v --checkers 1 --multi-thread-streams 1 --transfers 1"
+                f"rclone copy /home/pi/LamPi/sync/ OneDrive:LamPi/flopi{piNum} -v --checkers 1 --multi-thread-streams 1 --transfers 1"
             )
             pi_log(logName, "Started Sync")
 
-            # print(f"Syncing finished.\nGoing to sleep now, will start recording again at {start}")
-            # print("Zzzzzzzzzz"...")
         elif recstatus == "wait":
             sysTime = datetime.now()
-            print(f"{sysTime} is before {start}, so I'm waiting")
+            waiTime = sysTime.strftime("%Y-%m-%d_%H_%M_%S")
+            print(f"\nCurrent time is {waiTime}\n. Will restart recording on {start}")
             pi_log(logName, "Waiting")
             tm.sleep(60)
         else:
